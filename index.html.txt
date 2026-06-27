@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cuadro de Fármacos Antimicrobianos</title>
+  <!-- Fuente Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Reset y estilos generales */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #fef9f0;  /* Fondo crema cálido */
+      color: #2d2a24;
+      padding: 30px 20px;
+    }
+    .contenedor {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Título */
+    h1 {
+      text-align: center;
+      font-weight: 700;
+      font-size: 2.5rem;
+      color: #c4450c;  /* Naranja intenso */
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+    }
+    .subtitulo {
+      text-align: center;
+      font-weight: 300;
+      color: #7a5a3a;
+      margin-bottom: 40px;
+      font-size: 1.1rem;
+    }
+
+    /* Cuadrícula de tarjetas */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 25px;
+    }
+
+    /* Tarjeta */
+    .tarjeta {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 10px 15px;
+      border: 2px solid transparent;
+    }
+    .tarjeta:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 16px 40px rgba(196, 69, 12, 0.15);
+      border-color: #f5a623;
+    }
+    .tarjeta img {
+      width: 100%;
+      max-width: 140px;
+      height: 140px;
+      object-fit: contain;
+      border-radius: 12px;
+      background: #fcf6ed;
+      padding: 8px;
+      margin-bottom: 12px;
+    }
+    .tarjeta .nombre {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: #3d2b1a;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .tarjeta .subtitulo-tarjeta {
+      font-size: 0.75rem;
+      color: #b07d5a;
+      font-weight: 300;
+      margin-top: 2px;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(30, 20, 10, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease;
+    }
+    .modal-overlay.activo {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal {
+      background: white;
+      border-radius: 32px;
+      max-width: 760px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 40px 35px 35px;
+      position: relative;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+      animation: slideUp 0.35s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal::-webkit-scrollbar {
+      width: 6px;
+    }
+    .modal::-webkit-scrollbar-thumb {
+      background: #e3c9b0;
+      border-radius: 10px;
+    }
+
+    .modal .btn-cerrar {
+      position: absolute;
+      top: 18px;
+      right: 24px;
+      background: none;
+      border: none;
+      font-size: 2rem;
+      font-weight: 300;
+      color: #a07d5a;
+      cursor: pointer;
+      transition: transform 0.2s, color 0.2s;
+      line-height: 1;
+    }
+    .modal .btn-cerrar:hover {
+      transform: rotate(90deg);
+      color: #c4450c;
+    }
+
+    .modal-imagen {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .modal-imagen img {
+      max-width: 180px;
+      max-height: 180px;
+      object-fit: contain;
+      border-radius: 16px;
+      background: #fcf6ed;
+      padding: 10px;
+    }
+
+    .modal-titulo {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #c4450c;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+    .modal-molecula {
+      text-align: center;
+      font-weight: 300;
+      color: #7a5a3a;
+      margin-bottom: 25px;
+      font-size: 1rem;
+    }
+
+    .modal-datos {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px 30px;
+      margin-top: 10px;
+    }
+    .modal-datos .item {
+      border-bottom: 1px dashed #f0e1d3;
+      padding-bottom: 14px;
+    }
+    .modal-datos .item:last-child {
+      grid-column: 1 / -1;  /* El mecanismo de acción ocupa ambas columnas */
+      border-bottom: none;
+    }
+    .modal-datos .label {
+      font-weight: 600;
+      color: #b07d5a;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+    .modal-datos .valor {
+      font-weight: 400;
+      color: #2d2a24;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+    }
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+      .modal {
+        padding: 30px 20px 25px;
+      }
+      .modal-datos {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .modal-datos .item:last-child {
+        grid-column: 1;
+      }
+      .modal-titulo {
+        font-size: 1.6rem;
+      }
+    }
+    @media (max-width: 450px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .tarjeta {
+        padding: 12px 6px 10px;
+      }
+      .tarjeta img {
+        max-width: 90px;
+        height: 90px;
+      }
+      .tarjeta .nombre {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="contenedor">
+  <h1>🧪 Fármacos Antimicrobianos</h1>
+  <p class="subtitulo">Haz clic en cualquier tarjeta para ver los detalles completos</p>
+
+  <div class="grid" id="gridTarjetas"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContenido">
+    <button class="btn-cerrar" id="btnCerrarModal">&times;</button>
+    <div class="modal-imagen" id="modalImagen"></div>
+    <div class="modal-titulo" id="modalTitulo"></div>
+    <div class="modal-molecula" id="modalMolecula"></div>
+    <div class="modal-datos" id="modalDatos"></div>
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  //  DATOS (extraídos directamente de tu tabla)
+  //  El orden de las imágenes es: 1_Penicilina.webp, 2_Cefalosporinas.webp, ...
+  // ============================================================
+  const farmacos = [
+    {
+      id: 1,
+      nombre: "Penicilina",
+      imagen: "1_Penicilina.webp",
+      bactericida: "Bactericida.",
+      eficiencia: "Gram positivas. Algunas Gram negativas.",
+      recetado: "Streptococcus pyogenes, Staphylococcus aureus, Neisseria meningitidis y Listeria monocytogenes.",
+      mecanismo: "Inhibición de la biosíntesis de la pared celular bacteriana al unirse a las proteínas fijadoras de penicilina, las cuales son enzimas responsables del entrecruzamiento del peptidoglicano."
+    },
+    {
+      id: 2,
+      nombre: "Cefalosporinas",
+      imagen: "2_Cefalosporinas.webp",
+      bactericida: "Bactericida.",
+      eficiencia: "Gram positivas y Gram negativas.",
+      recetado: "Staphylococcus aureus, Streptococcus pneumoniae, Escherichia coli, especies de Klebsiella, Pseudomonas aeruginosa y Neisseria.",
+      mecanismo: "Interferir con la síntesis del peptidoglicano mediante la unión covalente a las proteínas fijadoras de penicilina, inactivándolas y alterando la integridad estructural de la pared celular."
+    },
+    {
+      id: 3,
+      nombre: "Vancomicina",
+      imagen: "3_Vancomicina.webp",
+      bactericida: "Bactericida/Bacteriostático contra enterococos.",
+      eficiencia: "Gram positivas.",
+      recetado: "Staphylococcus aureus (incluyendo cepas resistentes a meticilina), Staphylococcus epidermidis, estreptococos hemolíticos, neumococos y clostridios.",
+      mecanismo: "Inhibición de la síntesis de la pared celular bacteriana al unirse al extremo D-Ala-D-Ala de los precursores del peptidoglicano, bloqueando las reacciones de transglicosilación y transpeptidación."
+    },
+    {
+      id: 4,
+      nombre: "Imipenem",
+      imagen: "4_Imipenem.webp",
+      bactericida: "Bactericida.",
+      eficiencia: "Gram positivas, Gram negativas y anaerobias.",
+      recetado: "Estreptococos, estafilococos sensibles a meticilina, Neisseria, Haemophilus, Pseudomonas aeruginosa y Bacteroides fragilis.",
+      mecanismo: "Unión a las proteínas fijadoras de penicilina, lo que impide la construcción de la pared celular y provoca la lisis y muerte bacteriana."
+    },
+    {
+      id: 5,
+      nombre: "Polimicinas",
+      imagen: "5_Polimicinas.webp",
+      bactericida: "Bactericida.",
+      eficiencia: "Gram negativas.",
+      recetado: "Pseudomonas aeruginosa, Acinetobacter baumannii, Klebsiella pneumoniae y Escherichia coli.",
+      mecanismo: "Los péptidos catiónicos de la molécula se insertan en la membrana externa bacteriana, interaccionando con los lipopolisacáridos para desorganizar su integridad y aumentar la permeabilidad, lo que conduce a la muerte celular."
+    },
+    {
+      id: 6,
+      nombre: "Polienos",
+      imagen: "6_Polienos.webp",
+      bactericida: "Fungicida.",
+      eficiencia: "Antifúngico, algunos protozoarios.",
+      recetado: "Candida albicans, Cryptococcus neoformans, especies de Aspergillus, Histoplasma capsulatum y Leishmania.",
+      mecanismo: "Unión al ergosterol presente en la membrana de las células fúngicas, lo que induce la formación de poros que provocan la pérdida de iones esenciales y otros contenidos intracelulares."
+    },
+    {
+      id: 7,
+      nombre: "Imidazoles",
+      imagen: "7_Imidazoles.webp",
+      bactericida: "Fungistático a bajas concentraciones/fungicida a altas concentraciones.",
+      eficiencia: "Antifúngico, algunos parásitos y bacterias.",
+      recetado: "Candida albicans, Aspergillus, Cryptococcus neoformans e Histoplasma capsulatum.",
+      mecanismo: "Inhibición de la enzima del citocromo P450 responsable de la desmetilación del lanosterol para formar ergosterol, lo que resulta en el agotamiento de este último y daños en la membrana fúngica."
+    },
+    {
+      id: 8,
+      nombre: "Sulfonamidas",
+      imagen: "8_Sulfonamidas.webp",
+      bactericida: "Bacteriostático.",
+      eficiencia: "Gram positivas, ciertas Gram negativas, algunos hongos y protozoarios.",
+      recetado: "Escherichia coli, especies de Klebsiella, Salmonella, Shigella, Chlamydia, Pneumocystis carinii y Toxoplasma gondii.",
+      mecanismo: "Antagonistas competitivos del ácido para-aminobenzoico (PABA), bloqueando de forma reversible la síntesis de ácido fólico necesaria para la producción de ácidos nucleicos y el crecimiento bacteriano."
+    },
+    {
+      id: 9,
+      nombre: "Trimeptoprim",
+      imagen: "9_Trimeptoprim.webp",
+      bactericida: "Bacteriostático/bactericida combinado con sulfonamidas.",
+      eficiencia: "Gram positivos, algunos bacilos aerobios Gram negativos.",
+      recetado: "Staphylococcus aureus, Streptococcus pneumoniae, Escherichia coli, Klebsiella pneumoniae y Haemophilus influenzae.",
+      mecanismo: "Inhibición competitiva de la enzima dihidrofolato reductasa, bloqueando la producción de tetrahidrofolato, que es la forma activa del ácido fólico."
+    },
+    {
+      id: 10,
+      nombre: "Tetraciclinas",
+      imagen: "10_Tetraciclinas.webp",
+      bactericida: "Bacteriostático.",
+      eficiencia: "Gram positivas y Gram negativas, micoplasmas y algunos protozoarios.",
+      recetado: "Chlamydia, Rickettsia, Anaplasma, Mycoplasma, Borrelia burgdorferi y Brucella.",
+      mecanismo: "Inhibición de la síntesis de proteínas mediante la unión a la unidad ribosomal 30S bacteriana, lo que bloquea de forma alostérica la unión del aminoacil-ARNt al sitio aceptador del ribosoma."
+    },
+    {
+      id: 11,
+      nombre: "Macrolidos",
+      imagen: "11_Macrolidos.webp",
+      bactericida: "Bacteriostático.",
+      eficiencia: "Gram positivas, cocos Gram negativos y algunos patógenos atípicos.",
+      recetado: "Staphylococcus aureus, Streptococcus pneumoniae, Mycoplasma, Legionella y Chlamydia.",
+      mecanismo: "Unión a la subunidad ribosomal 50S cerca del centro de la peptidil transferasa, inhibiendo la síntesis de proteínas al bloquear el túnel de salida por el cual deben pasar las cadenas de péptidos nacientes."
+    },
+    {
+      id: 12,
+      nombre: "Lincomicina",
+      imagen: "12_Lincomicina.webp",
+      bactericida: "Bacteriostático/bactericida a elevadas concentraciones.",
+      eficiencia: "Gram positivas y algunos protozoarios.",
+      recetado: "Staphylococcus, Streptococcus y cocos anaerobios Gram positivos.",
+      mecanismo: "Bloqueo de la síntesis de proteínas microbianas al interactuar con la subunidad 50S del ribosoma bacteriano, compitiendo por los sitios de unión relacionados con la peptidil transferasa y la iniciación de la cadena."
+    },
+    {
+      id: 13,
+      nombre: "Clindamicina",
+      imagen: "13_Clindamicina.webp",
+      bactericida: "Bacteriostático/bactericida contra algunos patógenos, dependiendo de la concentración.",
+      eficiencia: "Gram positivos, Gram negativos anaerobios y ciertos protozoos.",
+      recetado: "Bacteroides fragilis, especies de Fusobacterium, Peptostreptococcus, Staphylococcus aureus, Toxoplasma gondii y Plasmodium falciparum.",
+      mecanismo: "Unión a la subunidad 50S del ribosoma bacteriano para interferir con la síntesis de proteínas, lo que además altera la superficie celular y disminuye la adherencia de las bacterias a las células del huésped."
+    },
+    {
+      id: 14,
+      nombre: "Quinolonas",
+      imagen: "14_Quinolonas.webp",
+      bactericida: "Bactericida.",
+      eficiencia: "Gram positivas, Gram negativas, anaerobios y micobacterias.",
+      recetado: "Escherichia coli, Staphylococcus aureus, Pseudomonas aeruginosa, Mycoplasma pneumoniae y Mycobacterium tuberculosis.",
+      mecanismo: "Interrumpción la síntesis de ADN bacteriano al inhibir las enzimas topoisomerasa IV y ADN girasa, convirtiéndolas en toxinas celulares que provocan roturas permanentes en el cromosoma."
+    },
+    {
+      id: 15,
+      nombre: "Metronidazol",
+      imagen: "15_Metronidazol.webp",
+      bactericida: "Bactericida.",
+      eficiencia: "Bacterias anaerobias obligadas y algunos protozoarios.",
+      recetado: "Bacteroides fragilis, Clostridium difficile, Helicobacter pylori, Trichomonas vaginalis, Giardia lamblia y Entamoeba histolytica.",
+      mecanismo: "Entrada en la célula por difusión pasiva y posterior activación mediante un proceso de reducción que genera metabolitos de vida corta altamente citotóxicos, los cuales dañan directamente el ADN bacteriano."
+    },
+    {
+      id: 16,
+      nombre: "Aciclovir",
+      imagen: "16_Aciclovir.webp",
+      bactericida: "Antiviral.",
+      eficiencia: "Ciertos virus humanos.",
+      recetado: "Virus del herpes simple tipo 1 (HSV-1), HSV-2, virus de la varicela-zóster (VZV) y el virus de Epstein-Barr.",
+      mecanismo: "Fosforilado por la timidina quinasa viral, se convertirte en su forma de trifosfato, la cual inhibe la ADN polimerasa viral al competir con los sustratos naturales y terminar la elongación de la cadena de ADN del virus."
+    },
+    {
+      id: 17,
+      nombre: "Azidotimina",
+      imagen: "17_Azidotimina.webp",
+      bactericida: "Antiviral.",
+      eficiencia: "Retrovirus.",
+      recetado: "Virus de la Inmunodeficiencia Humana (VIH).",
+      mecanismo: "Bloquear la actividad de la transcriptasa inversa al incorporarse su forma activa de trifosfato en la cadena de ADN proviral naciente, lo que provoca la terminación de la cadena."
+    }
+  ];
+
+  // ============================================================
+  //  GENERAR TARJETAS
+  // ============================================================
+  const grid = document.getElementById('gridTarjetas');
+
+  farmacos.forEach(f => {
+    const tarjeta = document.createElement('div');
+    tarjeta.className = 'tarjeta';
+    tarjeta.innerHTML = `
+      <img src="img/${f.imagen}" alt="${f.nombre}" loading="lazy">
+      <div class="nombre">${f.nombre}</div>
+      <div class="subtitulo-tarjeta">${f.bactericida.substring(0, 30)}…</div>
+    `;
+    tarjeta.addEventListener('click', () => abrirModal(f));
+    grid.appendChild(tarjeta);
+  });
+
+  // ============================================================
+  //  MODAL
+  // ============================================================
+  const overlay = document.getElementById('modalOverlay');
+  const modal = document.getElementById('modalContenido');
+  const btnCerrar = document.getElementById('btnCerrarModal');
+
+  function abrirModal(f) {
+    // Imagen
+    document.getElementById('modalImagen').innerHTML = `<img src="img/${f.imagen}" alt="${f.nombre}">`;
+    // Título
+    document.getElementById('modalTitulo').textContent = f.nombre;
+    // Molécula (solo mostramos el nombre de la imagen, o podríamos omitirlo)
+    document.getElementById('modalMolecula').textContent = f.imagen.replace(/\.webp$/, '').replace(/_/g, ' ');
+    // Datos
+    const datosDiv = document.getElementById('modalDatos');
+    datosDiv.innerHTML = `
+      <div class="item">
+        <div class="label">Bactericida / Bacteriostático</div>
+        <div class="valor">${f.bactericida}</div>
+      </div>
+      <div class="item">
+        <div class="label">Eficiencia antimicrobiana</div>
+        <div class="valor">${f.eficiencia}</div>
+      </div>
+      <div class="item">
+        <div class="label">Recetado contra</div>
+        <div class="valor">${f.recetado}</div>
+      </div>
+      <div class="item">
+        <div class="label">Mecanismo de acción</div>
+        <div class="valor">${f.mecanismo}</div>
+      </div>
+    `;
+    // Mostrar modal con animación
+    overlay.classList.add('activo');
+    document.body.style.overflow = 'hidden';  // Evitar scroll detrás
+  }
+
+  function cerrarModal() {
+    overlay.classList.remove('activo');
+    document.body.style.overflow = '';
+  }
+
+  // Eventos para cerrar
+  btnCerrar.addEventListener('click', cerrarModal);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) cerrarModal();
+  });
+
+  // Cerrar con tecla ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay.classList.contains('activo')) cerrarModal();
+  });
+</script>
+
+</body>
+</html>
