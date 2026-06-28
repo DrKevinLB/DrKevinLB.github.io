@@ -289,6 +289,7 @@
   //  El orden de las imágenes es: 1_Penicilina.webp, 2_Cefalosporinas.webp, ...
   // ============================================================
   const farmacos = [
+    
     {
       id: 1,
       nombre: "Penicilina",
@@ -468,6 +469,19 @@
   const modal = document.getElementById('modalContenido');
   const btnCerrar = document.getElementById('btnCerrarModal');
 
+    // Función para poner en cursiva nombres científicos (Género especie)
+  function aplicarCursiva(texto) {
+    // Busca patrones como "PalabraMayuscula palabra" o "PalabraMayuscula."
+    return texto.replace(/\b([A-Z][a-z]+)\s+([a-z]+)/g, function(match, genero, especie) {
+      // Asegura que no se modifiquen palabras como "Gram" o "No"
+      const excepciones = ['Gram', 'No', 'Las', 'Los'];
+      if (excepciones.includes(genero) || excepciones.includes(especie)) {
+        return match;
+      }
+      return `<i>${genero} ${especie}</i>`;
+    });
+  }
+
   function abrirModal(f) {
     // Imagen
     document.getElementById('modalImagen').innerHTML = `<img src="img/${f.imagen}" alt="${f.nombre}">`;
@@ -488,11 +502,11 @@
       </div>
       <div class="item">
         <div class="label">Recetado contra</div>
-        <div class="valor">${f.recetado}</div>
+        <div class="valor">${aplicarCursiva(f.recetado)}</div>
       </div>
       <div class="item">
         <div class="label">Mecanismo de acción</div>
-        <div class="valor">${f.mecanismo}</div>
+        <div class="valor">${aplicarCursiva(f.mecanismo)}</div>
       </div>
     `;
     // Mostrar modal con animación
